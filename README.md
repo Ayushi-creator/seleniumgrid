@@ -18,13 +18,55 @@ java -jar selenium-server-4.29.0.jar node --port 5556 --hub http://10.0.0.241:44
 
 ✅ Make sure port **4444** is the default hub port and **5556** is the custom node port.
 
-**1.3 Verify Hub & Node**
+**Note:** If the URL `http://10.0.0.241:4444/ui` shows a "Not Secure" warning, it's normal for HTTP-based local Selenium UIs. You can safely continue. This warning appears because the local server is using HTTP instead of HTTPS.
+
+**1.3 Registration Issue Fix**
+If the node continuously logs:
+```
+Sending registration event...
+Registration event failed after period of 120 seconds.
+```
+It means the node is **failing to register** with the hub.
+
+#### ✅ Solution:
+- Confirm the hub is actually running by visiting:
+  ```bash
+  curl http://10.0.0.241:4444/status
+  ```
+  Expected:
+  ```json
+  {"value":{"ready":true}}
+  ```
+
+- Make sure the remote PC can reach port `4444` on IP `10.0.0.241`. Run this from the remote PC:
+  ```bash
+  curl http://10.0.0.241:4444/status
+  ```
+
+- Try restarting the hub and node in this order:
+  1. Stop any running instances.
+  2. Start hub first:
+     ```bash
+     java -jar selenium-server-4.29.0.jar hub
+     ```
+  3. Then node:
+     ```bash
+     java -jar selenium-server-4.29.0.jar node --port 5556 --hub http://10.0.0.241:4444 --selenium-manager true
+     ```
+
+- ✅ Note: There was a typo in the command. Make sure to write `--selenium-manager true` (not `trueue`).
+
+**1.4 Verify Hub & Node**
 - Visit: [http://10.0.0.241:4444/ui](http://10.0.0.241:4444/ui)
 - Or run:
 ```bash
 curl http://10.0.0.241:4444/status | jq '.value.nodes'
 ```
 - Output should list connected nodes.
+
+If UI does not load:
+- Try using Firefox or Incognito mode.
+- Confirm that the `/ui` page is not blocked by firewall or browser extension.
 
 ---
 
@@ -139,6 +181,9 @@ npx playwright test tests/example.js
 
 - **Same Network**:
   Ensure both machines are on the same LAN or connected via VPN.
+
+- **Browser not launching remotely?**
+  Make sure Chrome is installed on the remote machine and accessible via path.
 
 ---
 
